@@ -10,8 +10,14 @@ SUCCESS_CODES = {"00", "000"}
 DAILY_LIMIT_CODE = "22"
 
 SERVICES = {
-    "rent": ("RTMSDataSvcRHRent/getRTMSDataSvcRHRent", "raw.row_house_rent_transactions"),
-    "sale": ("RTMSDataSvcRHTrade2/getRTMSDataSvcRHTrade2", "raw.row_house_sale_transactions"),
+    "rent": (
+        "RTMSDataSvcRHRent/getRTMSDataSvcRHRent",
+        "raw.row_house_rent_transactions",
+    ),
+    "sale": (
+        "RTMSDataSvcRHTrade2/getRTMSDataSvcRHTrade2",
+        "raw.row_house_sale_transactions",
+    ),
 }
 
 RAW_TABLE_DDL = """
@@ -50,14 +56,18 @@ def fetch(service, sigungu_code, deal_year_month, api_key, num_of_rows=9999):
     path, _ = SERVICES[service]
     items, page = [], 1
     while True:
-        query = urllib.parse.urlencode({
-            "serviceKey": api_key,
-            "LAWD_CD": sigungu_code,
-            "DEAL_YMD": deal_year_month,
-            "pageNo": page,
-            "numOfRows": num_of_rows,
-        })
-        with urllib.request.urlopen(f"{BASE_URL}/{path}?{query}", timeout=60) as response:
+        query = urllib.parse.urlencode(
+            {
+                "serviceKey": api_key,
+                "LAWD_CD": sigungu_code,
+                "DEAL_YMD": deal_year_month,
+                "pageNo": page,
+                "numOfRows": num_of_rows,
+            }
+        )
+        with urllib.request.urlopen(
+            f"{BASE_URL}/{path}?{query}", timeout=60
+        ) as response:
             page_items, total_count = parse(response.read())
         items += page_items
         if not page_items or len(items) >= total_count:
@@ -68,14 +78,30 @@ def fetch(service, sigungu_code, deal_year_month, api_key, num_of_rows=9999):
 def load_partition(conn, service, sigungu_code, deal_year_month, items):
     """Replace one partition in a single transaction (delete + insert)."""
     _, table = SERVICES[service]
-    source_params = json.dumps({"service": service, "LAWD_CD": sigungu_code, "DEAL_YMD": deal_year_month})
+    source_params = json.dumps(
+        {"service": service, "LAWD_CD": sigungu_code, "DEAL_YMD": deal_year_month}
+    )
     with conn, conn.cursor() as cursor:
-        cursor.execute(RAW_TABLE_DDL.format(table=table, index=table.split(".")[1] + "_partition_idx"))
+        cursor.execute(
+            RAW_TABLE_DDL.format(
+                table=table, index=table.split(".")[1] + "_partition_idx"
+            )
+        )
         cursor.execute(
             f"delete from {table} where sigungu_code = %s and deal_year_month = %s",
             (sigungu_code, deal_year_month),
         )
         cursor.executemany(
-            f"insert into {table} (sigungu_code, deal_year_month, payload, source_params) values (%s, %s, %s, %s)",
-            [(sigungu_code, deal_year_month, json.dumps(item, ensure_ascii=False), source_params) for item in items],
+            f"insert into {table}"
+            " (sigungu_code, deal_year_month, payload, source_params)"
+            " values (%s, %s, %s, %s)",
+            [
+                (
+                    sigungu_code,
+                    deal_year_month,
+                    json.dumps(item, ensure_ascii=False),
+                    source_params,
+                )
+                for item in items
+            ],
         )

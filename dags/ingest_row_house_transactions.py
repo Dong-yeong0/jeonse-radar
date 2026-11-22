@@ -4,8 +4,8 @@ from datetime import timedelta
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.sdk import Param, dag, get_current_context, task
 from airflow.sdk.exceptions import AirflowFailException
-from assets import ROW_HOUSE_RENT_TRANSACTIONS, ROW_HOUSE_SALE_TRANSACTIONS
 
+from assets import ROW_HOUSE_RENT_TRANSACTIONS, ROW_HOUSE_SALE_TRANSACTIONS
 from ingestion import row_house_transactions
 
 
