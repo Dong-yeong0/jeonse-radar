@@ -1,5 +1,6 @@
 """Client, parser and loader for the MOLIT row-house (villa) transaction APIs."""
 
+import hashlib
 import json
 import urllib.parse
 import urllib.request
@@ -19,17 +20,6 @@ SERVICES = {
         "raw.row_house_sale_transactions",
     ),
 }
-
-RAW_TABLE_DDL = """
-create table if not exists {table} (
-    sigungu_code text not null,
-    deal_year_month text not null,
-    payload jsonb not null,
-    source_params jsonb not null,
-    loaded_at timestamptz not null default now()
-);
-create index if not exists {index} on {table} (sigungu_code, deal_year_month);
-"""
 
 
 class ApiError(Exception):
@@ -75,33 +65,54 @@ def fetch(service, sigungu_code, deal_year_month, api_key, num_of_rows=9999):
         page += 1
 
 
+def response_hash(items):
+    """Hash of a partition response that ignores item order."""
+    rows = sorted(
+        json.dumps(item, ensure_ascii=False, sort_keys=True) for item in items
+    )
+
+    return hashlib.sha256("\n".join(rows).encode()).hexdigest()
+
+
 def load_partition(conn, service, sigungu_code, deal_year_month, items):
-    """Replace one partition in a single transaction (delete + insert)."""
+    """Append the response as a new batch unless it equals the latest batch.
+
+    Raw is append-only. A batch is identified by loaded_at, which is the same
+    for every row inserted in one transaction.
+    """
+    # ponytail: an empty response inserts no rows, so a partition that drops to
+    # zero rows keeps its previous batch as latest. Add a batch log table if
+    # that matters.
     _, table = SERVICES[service]
+    new_hash = response_hash(items)
     source_params = json.dumps(
         {"service": service, "LAWD_CD": sigungu_code, "DEAL_YMD": deal_year_month}
     )
     with conn, conn.cursor() as cursor:
         cursor.execute(
-            RAW_TABLE_DDL.format(
-                table=table, index=table.split(".")[1] + "_partition_idx"
-            )
-        )
-        cursor.execute(
-            f"delete from {table} where sigungu_code = %s and deal_year_month = %s",
+            f"SELECT response_hash FROM {table}"
+            " WHERE sigungu_code = %s AND deal_year_month = %s"
+            " ORDER BY loaded_at DESC LIMIT 1",
             (sigungu_code, deal_year_month),
         )
+        latest = cursor.fetchone()
+        if latest and latest[0] == new_hash:
+            return False
+
         cursor.executemany(
-            f"insert into {table}"
-            " (sigungu_code, deal_year_month, payload, source_params)"
-            " values (%s, %s, %s, %s)",
+            f"INSERT INTO {table}"
+            " (sigungu_code, deal_year_month, payload, source_params, response_hash)"
+            " VALUES (%s, %s, %s, %s, %s)",
             [
                 (
                     sigungu_code,
                     deal_year_month,
                     json.dumps(item, ensure_ascii=False),
                     source_params,
+                    new_hash,
                 )
                 for item in items
             ],
         )
+
+    return True
