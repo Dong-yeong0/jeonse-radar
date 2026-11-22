@@ -12,21 +12,35 @@ from ingestion import row_house_transactions
 KST = "Asia/Seoul"
 
 
-@dag(
-    schedule="@monthly",
-    start_date=pendulum.datetime(2015, 1, 1, tz=KST),
-    catchup=False,
-    max_active_runs=2,
-    params={
-        "sido_names": Param(["서울특별시"], type="array", items={"type": "string"}),
-    },
-    tags=["row_house_transactions"],
-)
-def ingest_row_house_transactions():
+def make_ingest_dag(dag_id, schedule, start_date, months_back):
+    """Each run collects the logical month and the months_back - 1 months before."""
+
+    @dag(
+        dag_id=dag_id,
+        schedule=schedule,
+        start_date=start_date,
+        catchup=False,
+        max_active_runs=2,
+        params={
+            "sido_names": Param(["서울특별시"], type="array", items={"type": "string"}),
+        },
+        tags=["row_house_transactions"],
+    )
+    def ingest_dag():
+        build_tasks(months_back)
+
+    return ingest_dag()
+
+
+def build_tasks(months_back):
     @task
     def list_partitions():
         context = get_current_context()
-        deal_year_month = context["logical_date"].in_timezone(KST).strftime("%Y%m")
+        month_start = context["logical_date"].in_timezone(KST).start_of("month")
+        deal_year_months = [
+            month_start.subtract(months=offset).strftime("%Y%m")
+            for offset in range(months_back)
+        ]
         rows = PostgresHook(postgres_conn_id="warehouse").get_records(
             """
             SELECT DISTINCT left(legal_dong_code, 5)
@@ -45,6 +59,7 @@ def ingest_row_house_transactions():
                 "sigungu_code": sigungu_code,
                 "deal_year_month": deal_year_month,
             }
+            for deal_year_month in deal_year_months
             for (sigungu_code,) in rows
             for service in row_house_transactions.SERVICES
         ]
@@ -93,4 +108,16 @@ def ingest_row_house_transactions():
     publish_raw_assets(ingest.expand(partition=list_partitions()))
 
 
-ingest_row_house_transactions()
+make_ingest_dag(
+    "ingest_row_house_transactions",
+    schedule="@monthly",
+    start_date=pendulum.datetime(2015, 1, 1, tz=KST),
+    months_back=1,
+)
+
+make_ingest_dag(
+    "ingest_row_house_transactions_daily",
+    schedule="@daily",
+    start_date=pendulum.datetime(2026, 11, 1, tz=KST),
+    months_back=3,
+)
