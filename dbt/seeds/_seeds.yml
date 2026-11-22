@@ -1,0 +1,15 @@
+seeds:
+  - name: legal_dong_codes
+    description: 국토교통부 전국 법정동 코드 (2026-06-30 기준)
+    config:
+      column_types:
+        legal_dong_code: varchar(10)
+        created_at: date
+    columns:
+      - name: legal_dong_code
+        description: 법정동코드 10자리
+        data_tests:
+          - not_null
+          - unique
+      - name: eupmyeondong_name
+        description: 읍면동 이름. 실거래 umdNm과 매칭에 쓴다
