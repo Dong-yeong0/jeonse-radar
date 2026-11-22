@@ -1,0 +1,9 @@
+sources:
+  - name: raw
+    description: API 응답 원본
+    schema: raw
+    tables:
+      - name: row_house_rent_transactions
+        description: 연립다세대 전월세 실거래
+      - name: row_house_sale_transactions
+        description: 연립다세대 매매 실거래

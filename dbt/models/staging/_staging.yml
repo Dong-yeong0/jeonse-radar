@@ -1,0 +1,57 @@
+models:
+  - name: stg_row_house_rent_transactions
+    description: 연립다세대 전월세 실거래
+    columns:
+      - name: sigungu_code
+        description: 시군구코드 5자리
+        data_tests: [not_null]
+      - name: eupmyeondong_name
+        description: 법정동 이름
+        data_tests: [not_null]
+      - name: main_lot_number
+        description: 지번 본번
+      - name: sub_lot_number
+        description: 지번 부번, 없으면 0
+      - name: contract_date
+        description: 계약일
+        data_tests: [not_null]
+      - name: deposit_won
+        description: 보증금(원)
+        data_tests: [not_null]
+      - name: monthly_rent_won
+        description: 월세(원)
+        data_tests: [not_null]
+      - name: contract_type
+        description: 신규, 갱신
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['신규', '갱신']
+      - name: contract_start_month
+        description: 계약 시작월
+      - name: contract_end_month
+        description: 계약 종료월
+      - name: is_jeonse
+        description: 전세 여부
+        data_tests: [not_null]
+
+  - name: stg_row_house_sale_transactions
+    description: 연립다세대 매매 실거래
+    columns:
+      - name: sigungu_code
+        description: 시군구코드 5자리
+        data_tests: [not_null]
+      - name: eupmyeondong_name
+        description: 법정동 이름
+        data_tests: [not_null]
+      - name: contract_date
+        description: 계약일
+        data_tests: [not_null]
+      - name: sale_price_won
+        description: 매매가(원)
+        data_tests: [not_null]
+      - name: is_cancelled
+        description: 해제 여부
+        data_tests: [not_null]
+      - name: cancelled_date
+        description: 해제일
