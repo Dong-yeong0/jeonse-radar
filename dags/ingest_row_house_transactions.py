@@ -4,6 +4,7 @@ from datetime import timedelta
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.sdk import Param, dag, get_current_context, task
 from airflow.sdk.exceptions import AirflowFailException
+from assets import ROW_HOUSE_RENT_TRANSACTIONS, ROW_HOUSE_SALE_TRANSACTIONS
 
 from ingestion import row_house_transactions
 
@@ -31,7 +32,9 @@ def ingest_row_house_transactions():
         except row_house_transactions.ApiError as error:
             if error.code == row_house_transactions.DAILY_LIMIT_CODE:
                 raise AirflowFailException(str(error)) from error
+
             raise
+
         conn = PostgresHook(postgres_conn_id="warehouse").get_conn()
         try:
             row_house_transactions.load_partition(
@@ -39,9 +42,14 @@ def ingest_row_house_transactions():
             )
         finally:
             conn.close()
+
         return len(items)
 
-    ingest.expand(service=list(row_house_transactions.SERVICES))
+    @task(outlets=[ROW_HOUSE_RENT_TRANSACTIONS, ROW_HOUSE_SALE_TRANSACTIONS])
+    def publish_raw_assets(row_counts):
+        return list(row_counts)
+
+    publish_raw_assets(ingest.expand(service=list(row_house_transactions.SERVICES)))
 
 
 ingest_row_house_transactions()
