@@ -1,0 +1,17 @@
+.env
+*.zip
+data/
+__pycache__/
+*.pyc
+.venv/
+dbt/target/
+dbt/logs/
+airflow-db-volume/
+warehouse-db-volume/
+logs/
+config/
+.pytest_cache/
+*.csv
+tests/fixtures/*.csv
+tests/fixtures/*.xml
+tests/fixtures/*.json

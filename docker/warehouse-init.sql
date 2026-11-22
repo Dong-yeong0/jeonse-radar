@@ -1,0 +1,2 @@
+CREATE DATABASE metabase;
+CREATE SCHEMA raw;
