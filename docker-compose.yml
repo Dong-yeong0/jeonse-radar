@@ -269,6 +269,7 @@ services:
         echo "Files in shared volumes:"
         echo
         ls -la /opt/airflow/{logs,dags,plugins,config}
+        /entrypoint airflow pools set data_go_kr_api 4 "data.go.kr API calls"
 
     environment:
       <<: *airflow-common-env
