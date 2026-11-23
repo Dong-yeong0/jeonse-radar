@@ -1,0 +1,32 @@
+models:
+  - name: int_row_house_rent_transactions
+    description: 전월세 실거래, 법정동코드와 공시가격 매칭
+    columns:
+      - name: legal_dong_code
+        description: 법정동코드 10자리, 원천에서 구와 동이 안 맞는 신고는 NULL
+        data_tests:
+          - not_null:
+              config:
+                warn_if: ">0"
+                error_if: ">100"
+      - name: public_price_won
+        description: 매칭된 공시가격(원)
+      - name: public_price_match_method
+        description: exact, floor_area_median, area_median, building_median
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['exact', 'floor_area_median', 'area_median', 'building_median']
+      - name: public_price_base_date
+        description: 공시가격 기준일
+
+  - name: int_row_house_sale_transactions
+    description: 매매 실거래, 해제 거래 제외, 법정동코드
+    columns:
+      - name: legal_dong_code
+        description: 법정동코드 10자리, 원천에서 구와 동이 안 맞는 신고는 NULL
+        data_tests:
+          - not_null:
+              config:
+                warn_if: ">0"
+                error_if: ">100"

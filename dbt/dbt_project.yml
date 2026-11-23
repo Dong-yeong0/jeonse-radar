@@ -12,3 +12,8 @@ snapshot-paths: ["snapshots"]
 clean-targets:
   - target
   - dbt_packages
+
+models:
+  jeonse_radar:
+    intermediate:
+      +materialized: table
