@@ -55,3 +55,28 @@ models:
         data_tests: [not_null]
       - name: cancelled_date
         description: 해제일
+
+  - name: stg_housing_public_prices
+    description: 공동주택 호별 공시가격
+    columns:
+      - name: base_date
+        description: 공시 기준일
+        data_tests: [not_null]
+      - name: legal_dong_code
+        description: 법정동코드 10자리
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('legal_dong_codes')
+                field: legal_dong_code
+      - name: main_lot_number
+        description: 지번 본번
+      - name: sub_lot_number
+        description: 지번 부번, 없으면 0
+      - name: exclusive_area_m2
+        description: 전용면적(㎡)
+        data_tests: [not_null]
+      - name: public_price_won
+        description: 공시가격(원)
+        data_tests: [not_null]

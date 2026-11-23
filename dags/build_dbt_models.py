@@ -1,10 +1,15 @@
 from airflow.sdk import dag, task
 
-from assets import ROW_HOUSE_RENT_TRANSACTIONS, ROW_HOUSE_SALE_TRANSACTIONS
+from assets import (
+    HOUSING_PUBLIC_PRICES,
+    ROW_HOUSE_RENT_TRANSACTIONS,
+    ROW_HOUSE_SALE_TRANSACTIONS,
+)
 
 
 @dag(
-    schedule=[ROW_HOUSE_RENT_TRANSACTIONS, ROW_HOUSE_SALE_TRANSACTIONS],
+    schedule=(ROW_HOUSE_RENT_TRANSACTIONS & ROW_HOUSE_SALE_TRANSACTIONS)
+    | HOUSING_PUBLIC_PRICES,
     catchup=False,
     max_active_runs=1,
     tags=["dbt"],

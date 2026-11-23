@@ -37,6 +37,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ./ingestion:/opt/airflow/ingestion
     - ./dbt:/opt/airflow/dbt
+    - ./data:/opt/airflow/data:ro
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

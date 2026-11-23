@@ -7,3 +7,5 @@ sources:
         description: 연립다세대 전월세 실거래
       - name: row_house_sale_transactions
         description: 연립다세대 매매 실거래
+      - name: housing_public_prices
+        description: 공동주택 호별 공시가격 파일
