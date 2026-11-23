@@ -17,3 +17,5 @@ models:
   jeonse_radar:
     intermediate:
       +materialized: table
+    marts:
+      +materialized: table

@@ -1,0 +1,47 @@
+models:
+  - name: fct_rent_contracts
+    description: 전월세 계약
+    columns:
+      - name: deposit_to_public_price_ratio
+        description: 보증금 ÷ 공시가격, 전세이고 공시가격이 있을 때만
+
+  - name: fct_sale_contracts
+    description: 매매 계약, 해제 제외
+    columns:
+      - name: sale_price_won_per_m2
+        description: ㎡당 매매가(원)
+
+  - name: mart_building_risk
+    description: 건물별 위험 등급, 최근 12개월 전세 기준
+    columns:
+      - name: building_key
+        description: 법정동코드-본번-부번
+        data_tests: [unique, not_null]
+      - name: median_deposit_to_public_price_ratio
+        description: 보증금 ÷ 공시가격 중앙값
+      - name: hug_limit_band_share
+        description: 120% 초과 126% 이하 계약 비율
+      - name: over_hug_limit_share
+        description: 126% 초과 계약 비율
+      - name: median_jeonse_rate
+        description: 전세가율 중앙값
+      - name: sale_price_basis
+        description: 매매가 기준, building 또는 dong_build_decade
+      - name: expected_shortfall_count
+        description: 6개월 안 만기 중 지금 시세로 보증금이 모자랄 계약 수
+      - name: risk_grade
+        description: 고위험, 주의, 관찰, 판단불가
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['고위험', '주의', '관찰', '판단불가']
+
+  - name: mart_dong_risk_summary
+    description: 법정동별 위험 요약
+    columns:
+      - name: legal_dong_code
+        description: 법정동코드 10자리
+        data_tests: [unique, not_null]
+      - name: eupmyeondong_code_8
+        description: 법정동코드 앞 8자리, 경계 GeoJSON 매칭용
