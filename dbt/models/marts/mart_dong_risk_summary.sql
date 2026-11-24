@@ -2,6 +2,7 @@ SELECT
     legal_dong_code,
     left(legal_dong_code, 8) AS eupmyeondong_code_8,
     max(sigungu_code) AS sigungu_code,
+    max(sigungu_name) AS sigungu_name,
     max(eupmyeondong_name) AS eupmyeondong_name,
     count(*) AS building_count,
     count(*) FILTER (WHERE risk_grade = '고위험') AS high_risk_building_count,

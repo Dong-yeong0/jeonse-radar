@@ -121,6 +121,7 @@ recent_metrics AS (
         main_lot_number,
         sub_lot_number,
         max(sigungu_code) AS sigungu_code,
+        max(sigungu_name) AS sigungu_name,
         max(eupmyeondong_name) AS eupmyeondong_name,
         mode() WITHIN GROUP (ORDER BY building_name) AS building_name,
         max(build_year) AS build_year,

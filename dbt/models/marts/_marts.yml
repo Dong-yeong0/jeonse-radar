@@ -2,6 +2,8 @@ models:
   - name: fct_rent_contracts
     description: 전월세 계약
     columns:
+      - name: sigungu_name
+        description: 시군구 이름
       - name: deposit_to_public_price_ratio
         description: 보증금 ÷ 공시가격, 전세이고 공시가격이 있을 때만
 
